@@ -4,7 +4,7 @@ import './App.css';
 
 class App extends Component {
   render() {
-    var user1 = {
+    const user1 = {
       'firstName': 'little',
       'lastName': 'sister'
     }
