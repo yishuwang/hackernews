@@ -48,6 +48,21 @@ class App extends Component {
             </div>
           );
         })}
+        <p>ES6 箭头函数
+            注意：普通函数表达式会定义自己的this对象，但箭头函数仍使用包含它的语境下的this对象；
+            函数只有一个参数时，可以省去括号；
+            简洁函数体替代块状函数体，简洁函数体的返回不用显示声明，可移除return表达式。
+            </p>
+        {list.map(item => 
+          <div key={item.objectId}>
+            <span>
+              <a href={item.url}>{item.title}</a>
+            </span>
+            <span>{item.author}</span>
+            <span>{item.num_comments}</span>
+            <span>{item.points}</span>
+          </div>
+        )}
       </div>
     );
   }
