@@ -32,8 +32,15 @@ class App extends Component {
   constructor(props) {
     super(props); // 会在构造函数中设置this.props以供在构造函数中访问他们
     this.state = { //state使用this绑定在类上，整个组件可以访问到,每次修改组件内部状态，render会再次运行
-      list: list
+      list  //list:list 属性名变量名相同时简写
     };
+    this.onDismiss = this.onDismiss.bind(this); //类方法 this是类的实例
+  }
+  onDismiss(id) {
+    const isNotId = item => item.objectId !== id; // 判断结果是true保存，返回一个新数组
+    const updatedList = this.state.list.filter(isNotId);
+    console.log(updatedList)
+    this.setState({list:updatedList});
   }
   render() {
     return (
@@ -79,6 +86,25 @@ class App extends Component {
             <span>{item.author}</span>
             <span>{item.num_comments}</span>
             <span>{item.points}</span>
+          </div>
+        )}
+        <p>增加组件的交互，增加dismiss按钮</p>
+        {this.state.list.map(item=>
+          <div key={item.objectId}>
+            <span>
+              <a href={item.url}>{item.title}</a>
+            </span>
+            <span>{item.author}</span>
+            <span>{item.num_comments}</span>
+            <span>{item.points}</span>
+            <span>
+              <button 
+                onClick={() => this.onDismiss(item.objectId)}
+                type="button"
+              >
+                Dissmiss
+              </button>
+            </span>
           </div>
         )}
       </div>
