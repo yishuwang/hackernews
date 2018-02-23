@@ -42,6 +42,9 @@ class App extends Component {
     console.log(updatedList)
     this.setState({list:updatedList});
   }
+  onClickMe = ()=>{
+    console.log(this)
+  }
   render() {
     return (
       <div className="App">
@@ -107,6 +110,7 @@ class App extends Component {
             </span>
           </div>
         )}
+        <button onClick={this.onClickMe} type="button">类方法可以通过箭头函数自动绑定</button>
       </div>
     );
   }
