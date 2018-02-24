@@ -1,31 +1,29 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 // react拥抱不可变
-const user1 = {
-  firstName: '健康',
-  lastName: '平安'
-}
-// 模拟API获取到数据
-const list = [
-  {
-    title: 'React',
-    url: 'https://facebook.github.io/react/',
-    author: 'Jordan Walke',
-    num_comments: 3,
-    points: 4,
-    objectId: 0 // key属性，列表变化时识别成员状态，提升性能
-  },
-  {
-    title: 'Redux',
-    url: 'https://github.com/reactjs/redux',
-    author: 'Dan Abramov, Andrew Clark',
-    num_comments: 2,
-    points: 5,
-    objectId: 1
-  }
-];
+const DEFAULT_QUERY = 'redux';
+const PATH_BASE = 'https://hn.algolia.com/api/v1';
+const PATH_SEARCH = '/search';
+const PARAM_SEARCH = 'query=';
+// const list = [
+//   {
+//     title: 'React',
+//     url: 'https://facebook.github.io/react/',
+//     author: 'Jordan Walke',
+//     num_comments: 3,
+//     points: 4,
+//     objectId: 0 // key属性，列表变化时识别成员状态，提升性能
+//   },
+//   {
+//     title: 'Redux',
+//     url: 'https://github.com/reactjs/redux',
+//     author: 'Dan Abramov, Andrew Clark',
+//     num_comments: 2,
+//     points: 5,
+//     objectId: 1
+//   }
+// ];
   // 接受searchTerm并返回一个函数，因为所有filter函数都接受一个函数作为它的输入，返回的函数可以访问列表项目对象。返回的函数将根据函数定义的条件对列表进行过滤
   // function isSearched(searchTerm) {
   //   return function (item) {
@@ -43,11 +41,26 @@ class App extends Component {
   constructor(props) {
     super(props); // 会在构造函数中设置this.props以供在构造函数中访问他们
     this.state = { //state使用this绑定在类上，整个组件可以访问到,每次修改组件内部状态，render会再次运行
-      list,  //list:list 属性名变量名相同时简写
-      searchTerm: '' //初始搜索词是空
+      result: null,  //list:list 属性名变量名相同时简写
+      searchTerm: DEFAULT_QUERY, //初始搜索词是空
     };
+    this.setSearchTopStories = this.setSearchTopStories.bind(this);
+    this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
     this.onDismiss = this.onDismiss.bind(this); //类方法 this是类的实例
     this.onSearchChange = this.onSearchChange.bind(this); // 表单搜索
+  }
+  setSearchTopStories(result) {
+    this.setState({result});
+  }
+  fetchSearchTopStories(searchTerm) {
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+      .then(response => response.json())
+      .then(result => this.setSearchTopStories(result))
+      .catch(e => e);
+  }
+  componentDidMount() {
+    const {searchTerm} = this.state;
+    this.fetchSearchTopStories(searchTerm);
   }
   onDismiss(id) {
     const isNotId = item => item.objectId !== id; // 判断结果是true保存，返回一个新数组
@@ -71,7 +84,9 @@ class App extends Component {
   // 增加组件的交互，增加dismiss按钮，使用 this.onDismiss 并不够,因为这个类方法需要接收 item.objectID 属性来识别那个将要被忽略的项,
   // 这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数
   render() {
-    const {list, searchTerm} = this.state;
+    console.log(this.state)
+    const {searchTerm, result} = this.state;
+    if(!result) {return null;}
     return (
       <div className="page">
         <div className="interactions">
@@ -79,7 +94,7 @@ class App extends Component {
             value={searchTerm}
             onChange={this.onSearchChange}> Search </Search>
           <Table
-            list={list}
+            list={result.hits}
             pattern={searchTerm}
             onDismiss={this.onDismiss}/>
         </div>
