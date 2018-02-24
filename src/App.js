@@ -78,7 +78,7 @@ class App extends Component {
         这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数</p>
         <Search 
           value={searchTerm}
-          onChange={this.onSearchChange}/>
+          onChange={this.onSearchChange}> Search </Search>
         <Table
           list={list}
           pattern={searchTerm}
@@ -89,10 +89,10 @@ class App extends Component {
 }
 class Search extends Component {
   render() {
-    const {value, onChange} = this.props;
+    const {value, onChange,children} = this.props;
     return (
       <form>
-        <input type="text"
+        {children}<input type="text"
           value={value}
           onChange={onChange}/>
       </form>
