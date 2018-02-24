@@ -59,6 +59,10 @@ class App extends Component {
     console.log(this)
   }
   render() {
+    const {
+      list,
+      searchTerm
+    } = this.state;
     return (
       <div className="App">
         <header className="App-header">
@@ -68,6 +72,7 @@ class App extends Component {
         <form>
           过滤第四段
           <input type="text"
+            value={searchTerm}
             onChange={this.onSearchChange}/>
         </form>
         <p>确保列表每个成员的关键字key属性是稳定的标识符，而不是使用不稳定的数组索引，唯一key帮助react识别具体成员的增删改，以提升性能。</p>
@@ -111,7 +116,7 @@ class App extends Component {
         )}
         <p>增加组件的交互，增加dismiss按钮，使用 this.onDismiss 并不够,因为这个类方法需要接收 item.objectID 属性来识别那个将要被忽略的项,
         这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数</p>
-        {this.state.list.filter(isSearched(this.state.searchTerm)).map(item=>
+        {list.filter(isSearched(searchTerm)).map(item=>
           <div key={item.objectId}>
             <span>
               <a href={item.url}>{item.title}</a>
