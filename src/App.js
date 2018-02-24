@@ -58,65 +58,53 @@ class App extends Component {
   onClickMe = ()=>{
     console.log(this)
   }
+  //  <button onClick={this.onClickMe} type="button">类方法可以通过箭头函数自动绑定</button>
   render() {
-    const {
-      list,
-      searchTerm
-    } = this.state;
+    const {list, searchTerm} = this.state;
     return (
       <div className="App">
         <header className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
           <h1 className="App-title">Hello, 祝你{user1.firstName + ' ' + user1.lastName}</h1>
         </header>
-        <form>
-          过滤第四段
-          <input type="text"
-            value={searchTerm}
-            onChange={this.onSearchChange}/>
-        </form>
         <p>确保列表每个成员的关键字key属性是稳定的标识符，而不是使用不稳定的数组索引，唯一key帮助react识别具体成员的增删改，以提升性能。</p>
-        {list.map(function (item) {
-          return (
-            <div key={item.objectId}>
-              <span>
-                <a href={item.url}>{item.title}</a>
-              </span>
-              <span>{item.author}</span>
-              <span>{item.num_comments}</span>
-              <span>{item.points}</span>
-            </div>
-          );
-        })}
         <p>ES6 箭头函数 省略了函数声明表达式、花括号和返回声明，JSX简洁可读。
             注意：普通函数表达式会定义自己的this对象，但箭头函数仍使用包含它的语境下的this对象；
             函数只有一个参数时，可以省去括号；
             简洁函数体替代块状函数体，简洁函数体的返回不用显示声明，可移除return表达式。
             </p>
-        {list.map(item => 
-          <div key={item.objectId}>
-            <span>
-              <a href={item.url}>{item.title}</a>
-            </span>
-            <span>{item.author}</span>
-            <span>{item.num_comments}</span>
-            <span>{item.points}</span>
-          </div>
-        )}
         <p>此前在render方法中映射一个在组件外定义静态列表。现在可以在组件中使用state里的list了</p>
-        {this.state.list.map(item=>
-          <div key={item.objectId}>
-            <span>
-              <a href={item.url}>{item.title}</a>
-            </span>
-            <span>{item.author}</span>
-            <span>{item.num_comments}</span>
-            <span>{item.points}</span>
-          </div>
-        )}
         <p>增加组件的交互，增加dismiss按钮，使用 this.onDismiss 并不够,因为这个类方法需要接收 item.objectID 属性来识别那个将要被忽略的项,
         这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数</p>
-        {list.filter(isSearched(searchTerm)).map(item=>
+        <Search 
+          value={searchTerm}
+          onChange={this.onSearchChange}/>
+        <Table
+          list={list}
+          pattern={searchTerm}
+          onDismiss={this.onDismiss}/>
+      </div>
+    );
+  }
+}
+class Search extends Component {
+  render() {
+    const {value, onChange} = this.props;
+    return (
+      <form>
+        <input type="text"
+          value={value}
+          onChange={onChange}/>
+      </form>
+    );
+  }
+}
+class Table extends Component {
+  render() {
+    const {list, pattern, onDismiss} = this.props;
+    return (
+      <div>
+        {list.filter(isSearched(pattern)).map(item=>
           <div key={item.objectId}>
             <span>
               <a href={item.url}>{item.title}</a>
@@ -126,7 +114,7 @@ class App extends Component {
             <span>{item.points}</span>
             <span>
               <button 
-                onClick={() => this.onDismiss(item.objectId)}
+                onClick={() => onDismiss(item.objectId)}
                 type="button"
               >
                 Dissmiss
@@ -134,10 +122,8 @@ class App extends Component {
             </span>
           </div>
         )}
-        <button onClick={this.onClickMe} type="button">类方法可以通过箭头函数自动绑定</button>
       </div>
-    );
+    )
   }
 }
-
 export default App;
