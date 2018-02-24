@@ -34,7 +34,7 @@ const list = [
   // }
   // ES6 高阶函数 一个函数返回另一个函数
 const isSearched = searchTerm => item => item.title.toLowerCase().includes(searchTerm.toLowerCase());
-// 通过继承类的方式声明组件，公共接口render必须被重写，他定义了一个react组件的输出
+// 通过继承类的方式声明组件，公共接口render必须被重写，他定义了一个react组件的输出  需要使用内部状态才使用ES6类组件，其余组件使用函数式无状态组件
 class App extends Component {
   // 构造函数中初始化组件的状态  
   constructor(props) {
@@ -87,8 +87,7 @@ class App extends Component {
     );
   }
 }
-class Search extends Component {
-  render() {
+function Search(props) {
     const {value, onChange,children} = this.props;
     return (
       <form>
@@ -97,7 +96,6 @@ class Search extends Component {
           onChange={onChange}/>
       </form>
     );
-  }
 }
 class Table extends Component {
   render() {
