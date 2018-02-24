@@ -26,21 +26,34 @@ const list = [
     objectId: 1
   }
 ];
+  // 接受searchTerm并返回一个函数，因为所有filter函数都接受一个函数作为它的输入，返回的函数可以访问列表项目对象。返回的函数将根据函数定义的条件对列表进行过滤
+  // function isSearched(searchTerm) {
+  //   return function (item) {
+  //     return item.title.toLowerCase().includes(searchTerm.toLowerCase()); //ES5 str.indexOf(pattern)!==-1
+  //   }
+  // }
+  // ES6 高阶函数 一个函数返回另一个函数
+const isSearched = searchTerm => item => item.title.toLowerCase().includes(searchTerm.toLowerCase());
 // 通过继承类的方式声明组件，公共接口render必须被重写，他定义了一个react组件的输出
 class App extends Component {
   // 构造函数中初始化组件的状态  
   constructor(props) {
     super(props); // 会在构造函数中设置this.props以供在构造函数中访问他们
     this.state = { //state使用this绑定在类上，整个组件可以访问到,每次修改组件内部状态，render会再次运行
-      list  //list:list 属性名变量名相同时简写
+      list,  //list:list 属性名变量名相同时简写
+      searchTerm: '' //初始搜索词是空
     };
     this.onDismiss = this.onDismiss.bind(this); //类方法 this是类的实例
+    this.onSearchChange = this.onSearchChange.bind(this); // 表单搜索
   }
   onDismiss(id) {
     const isNotId = item => item.objectId !== id; // 判断结果是true保存，返回一个新数组
     const updatedList = this.state.list.filter(isNotId);
     console.log(updatedList)
     this.setState({list:updatedList});
+  }
+  onSearchChange(event) {
+    this.setState({searchTerm: event.target.value});
   }
   onClickMe = ()=>{
     console.log(this)
@@ -52,6 +65,11 @@ class App extends Component {
           <img src={logo} className="App-logo" alt="logo" />
           <h1 className="App-title">Hello, 祝你{user1.firstName + ' ' + user1.lastName}</h1>
         </header>
+        <form>
+          过滤第四段
+          <input type="text"
+            onChange={this.onSearchChange}/>
+        </form>
         <p>确保列表每个成员的关键字key属性是稳定的标识符，而不是使用不稳定的数组索引，唯一key帮助react识别具体成员的增删改，以提升性能。</p>
         {list.map(function (item) {
           return (
@@ -91,8 +109,9 @@ class App extends Component {
             <span>{item.points}</span>
           </div>
         )}
-        <p>增加组件的交互，增加dismiss按钮</p>
-        {this.state.list.map(item=>
+        <p>增加组件的交互，增加dismiss按钮，使用 this.onDismiss 并不够,因为这个类方法需要接收 item.objectID 属性来识别那个将要被忽略的项,
+        这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数</p>
+        {this.state.list.filter(isSearched(this.state.searchTerm)).map(item=>
           <div key={item.objectId}>
             <span>
               <a href={item.url}>{item.title}</a>
