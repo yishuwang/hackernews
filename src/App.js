@@ -63,10 +63,12 @@ class App extends Component {
     this.fetchSearchTopStories(searchTerm);
   }
   onDismiss(id) {
-    const isNotId = item => item.objectId !== id; // 判断结果是true保存，返回一个新数组
-    const updatedList = this.state.list.filter(isNotId);
-    console.log(updatedList)
-    this.setState({list:updatedList});
+    const isNotId = item => item.objectID !== id; // 判断结果是true保存，返回一个新数组
+    const updatedHits = this.state.result.hits.filter(isNotId);
+    this.setState({
+      // result:Object.assign({},this.state.result,{hits:updatedHits}) //后面对象会复写先前对象的该属性
+      result: {...this.state.result, hits:updatedHits}
+    });
   }
   onSearchChange(event) {
     this.setState({searchTerm: event.target.value});
@@ -111,7 +113,7 @@ const Search = ({value, onChange, children}) =>
 const Table = ({list, pattern, onDismiss}) =>
   <div className="table">
     {list.filter(isSearched(pattern)).map(item=>
-      <div key={item.objectId} className="table-row">
+      <div key={item.objectID} className="table-row">
         <span style={largeColumn}>
           <a href={item.url}>{item.title}</a>
         </span>
@@ -119,7 +121,7 @@ const Table = ({list, pattern, onDismiss}) =>
         <span style={smallColumn}>{item.num_comments}</span>
         <span style={smallColumn}>{item.points}</span>
         <span style={smallColumn}>
-          <Button onClick={() => onDismiss(item.objectId)} className="button-inline">
+          <Button onClick={() => onDismiss(item.objectID)} className="button-inline">
             Dissmiss
           </Button>
         </span>
