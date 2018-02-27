@@ -31,7 +31,7 @@ const PARAM_SEARCH = 'query=';
   //   }
   // }
   // ES6 高阶函数 一个函数返回另一个函数
-const isSearched = searchTerm => item => item.title.toLowerCase().includes(searchTerm.toLowerCase());
+// const isSearched = searchTerm => item => item.title.toLowerCase().includes(searchTerm.toLowerCase());
 const largeColumn = {width: '40%'};
 const midColumn = {width: '30%'};
 const smallColumn = {width: '10%'};
@@ -48,6 +48,13 @@ class App extends Component {
     this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
     this.onDismiss = this.onDismiss.bind(this); //类方法 this是类的实例
     this.onSearchChange = this.onSearchChange.bind(this); // 表单搜索
+    this.onSearchSubmit = this.onSearchSubmit.bind(this);
+  }
+  onSearchSubmit(event) {
+    const {searchTerm} = this.state;
+    console.log(searchTerm,this.state)
+    this.fetchSearchTopStories(searchTerm);
+    event.preventDefault();
   }
   setSearchTopStories(result) {
     this.setState({result});
@@ -86,33 +93,35 @@ class App extends Component {
   // 增加组件的交互，增加dismiss按钮，使用 this.onDismiss 并不够,因为这个类方法需要接收 item.objectID 属性来识别那个将要被忽略的项,
   // 这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数
   render() {
-    console.log(this.state)
     const {searchTerm, result} = this.state;
-    if(!result) {return null;}
+    // if(!result) {return null;}
     return (
       <div className="page">
         <div className="interactions">
           <Search 
             value={searchTerm}
-            onChange={this.onSearchChange}> Search </Search>
+            onChange={this.onSearchChange}
+            onSubmit={this.onSearchSubmit}> Search </Search>
+          {result && 
           <Table
             list={result.hits}
-            pattern={searchTerm}
             onDismiss={this.onDismiss}/>
+          }
         </div>
       </div>
     );
   }
 }
-const Search = ({value, onChange, children}) => 
-  <form>
-    {children}<input type="text"
+const Search = ({value, onChange, onSubmit, children}) => 
+  <form onSubmit={onSubmit}>
+    <input type="text"
       value={value}
       onChange={onChange}/>
+      <button type="submit"> {children} </button>
   </form>
-const Table = ({list, pattern, onDismiss}) =>
+const Table = ({list, onDismiss}) =>
   <div className="table">
-    {list.filter(isSearched(pattern)).map(item=>
+    {list.map(item=>
       <div key={item.objectID} className="table-row">
         <span style={largeColumn}>
           <a href={item.url}>{item.title}</a>
