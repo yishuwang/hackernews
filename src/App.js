@@ -3,10 +3,12 @@ import './App.css';
 
 // react拥抱不可变
 const DEFAULT_QUERY = 'redux';
+const DEFAULT_HPP = '100';
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
 const PARAM_PAGE = 'page=';
+const PARAM_HPP = 'hitsPerPage=';
 // const list = [
 //   {
 //     title: 'React',
@@ -15,14 +17,6 @@ const PARAM_PAGE = 'page=';
 //     num_comments: 3,
 //     points: 4,
 //     objectId: 0 // key属性，列表变化时识别成员状态，提升性能
-//   },
-//   {
-//     title: 'Redux',
-//     url: 'https://github.com/reactjs/redux',
-//     author: 'Dan Abramov, Andrew Clark',
-//     num_comments: 2,
-//     points: 5,
-//     objectId: 1
 //   }
 // ];
   // 接受searchTerm并返回一个函数，因为所有filter函数都接受一个函数作为它的输入，返回的函数可以访问列表项目对象。返回的函数将根据函数定义的条件对列表进行过滤
@@ -41,12 +35,12 @@ class App extends Component {
   // 构造函数中初始化组件的状态  
   constructor(props) {
     super(props); // 会在构造函数中设置this.props以供在构造函数中访问他们
-    this.state = { //state使用this绑定在类上，整个组件可以访问到,每次修改组件内部状态，render会再次运行
-      result: null,  //list:list 属性名变量名相同时简写
-      searchTerm: DEFAULT_QUERY, //初始搜索词是空
+    this.state = { //state使用this绑定在类上，整个组件可以访问到,每次修改组件内部状态，render会再次运行  //list:list 属性名变量名相同时简写
+      result: null,  
+      searchTerm: DEFAULT_QUERY, //初始搜索词
     };
-    this.setSearchTopStories = this.setSearchTopStories.bind(this);
-    this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
+    this.setSearchTopStories = this.setSearchTopStories.bind(this); // 填充数据
+    this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this); // 抓取数据
     this.onDismiss = this.onDismiss.bind(this); //类方法 this是类的实例
     this.onSearchChange = this.onSearchChange.bind(this); // 表单搜索
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
@@ -58,10 +52,20 @@ class App extends Component {
     event.preventDefault();
   }
   setSearchTopStories(result) {
-    this.setState({result});
+    const {hits, page} =result;
+    const oldHits = page !== 0
+      ? this.state.result.hits
+      : [];
+    const updatedHits = [
+      ...oldHits,
+      ...hits
+    ];
+    this.setState({
+      result: { hits: updatedHits, page}
+    });
   }
   fetchSearchTopStories(searchTerm, page=0) {
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`)
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
       .then(response => response.json())
       .then(result => this.setSearchTopStories(result))
       .catch(e => e);
@@ -80,9 +84,6 @@ class App extends Component {
   }
   onSearchChange(event) {
     this.setState({searchTerm: event.target.value});
-  }
-  onClickMe = ()=>{
-    console.log(this)
   }
   //  <button onClick={this.onClickMe} type="button">类方法可以通过箭头函数自动绑定</button>
   // 确保列表每个成员的关键字key属性是稳定的标识符，而不是使用不稳定的数组索引，唯一key帮助react识别具体成员的增删改，以提升性能。
