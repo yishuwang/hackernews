@@ -39,6 +39,7 @@ class App extends Component {
       results: null,  
       searchKey: '', //储存单个result,searchTerm是动态变量，这里需要稳定的变量，保存最近提交给API的关键词，也可以用它检索结果集中的某个结果
       searchTerm: DEFAULT_QUERY, //初始搜索词
+      error: null,
     };
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this); // 填充数据
@@ -81,7 +82,7 @@ class App extends Component {
     fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
       .then(response => response.json())
       .then(result => this.setSearchTopStories(result))
-      .catch(e => e);
+      .catch(e => this.setState({error: e}));
   }
   componentDidMount() {
     const {searchTerm} = this.state;
@@ -115,7 +116,7 @@ class App extends Component {
   // 增加组件的交互，增加dismiss按钮，使用 this.onDismiss 并不够,因为这个类方法需要接收 item.objectID 属性来识别那个将要被忽略的项,
   // 这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数
   render() {
-    const {searchTerm, results, searchKey} = this.state;
+    const {searchTerm, results, searchKey, error} = this.state;
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
     const list = (results && results[searchKey] && results[searchKey].hits) || []; //节省Table组件的条件渲染，没有结果就得到空列表 且传给More用searchTerm
     // if(!result) {return null;}
@@ -126,9 +127,15 @@ class App extends Component {
             value={searchTerm}
             onChange={this.onSearchChange}
             onSubmit={this.onSearchSubmit}> Search </Search>
-          <Table
-            list={list}
-            onDismiss={this.onDismiss}/>
+          {error
+          ? <div className="interactions">
+              <p>出错了</p>
+            </div>
+          : <Table
+              list={list}
+              onDismiss={this.onDismiss}
+            />
+          }
           <div className="interactions">
             <Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
               More
