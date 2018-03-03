@@ -36,32 +36,45 @@ class App extends Component {
   constructor(props) {
     super(props); // 会在构造函数中设置this.props以供在构造函数中访问他们
     this.state = { //state使用this绑定在类上，整个组件可以访问到,每次修改组件内部状态，render会再次运行  //list:list 属性名变量名相同时简写
-      result: null,  
+      results: null,  
+      searchKey: '', //储存单个result,searchTerm是动态变量，这里需要稳定的变量，保存最近提交给API的关键词，也可以用它检索结果集中的某个结果
       searchTerm: DEFAULT_QUERY, //初始搜索词
     };
+    this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this); // 填充数据
     this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this); // 抓取数据
     this.onDismiss = this.onDismiss.bind(this); //类方法 this是类的实例
     this.onSearchChange = this.onSearchChange.bind(this); // 表单搜索
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
   }
+  needsToSearchTopStories(searchTerm) {
+    return !this.state.results[searchTerm];
+  }
   onSearchSubmit(event) {
     const {searchTerm} = this.state;
-    console.log(searchTerm,this.state)
-    this.fetchSearchTopStories(searchTerm);
+    this.setState({searchKey: searchTerm});
+    if(this.needsToSearchTopStories(searchTerm)) {
+      this.fetchSearchTopStories(searchTerm);
+    }
     event.preventDefault();
   }
   setSearchTopStories(result) {
     const {hits, page} =result;
-    const oldHits = page !== 0
-      ? this.state.result.hits
+    const {searchKey, results} = this.state;
+    const oldHits = results && results[searchKey]
+      ? results[searchKey].hits
       : [];
     const updatedHits = [
       ...oldHits,
       ...hits
     ];
+    // 以搜索词为键名，所有结果储存起来，接下来根据searchKey从resluts集中检索result
     this.setState({
-      result: { hits: updatedHits, page}
+      results: {
+        ...results, // 用对象扩展运算符将所有其他包含在results集中的searchKey展开，否则将失去之前所有存储过的results
+        [searchKey]: { hits: updatedHits, page} // searchKey(键名，在componentDidMount 和 onSearchSubmit设置的)保存更新后的hits和page 
+        // [searchKey]是通过计算得到属性名， 实现动态分配对象的值
+      }
     });
   }
   fetchSearchTopStories(searchTerm, page=0) {
@@ -72,14 +85,21 @@ class App extends Component {
   }
   componentDidMount() {
     const {searchTerm} = this.state;
+    this.setState({ searchKey: searchTerm});
     this.fetchSearchTopStories(searchTerm);
   }
   onDismiss(id) {
+    const {searchKey, results} = this.state;
+    const {hits, page} = results[searchKey];
     const isNotId = item => item.objectID !== id; // 判断结果是true保存，返回一个新数组
-    const updatedHits = this.state.result.hits.filter(isNotId);
+    const updatedHits = hits.filter(isNotId);
     this.setState({
       // result:Object.assign({},this.state.result,{hits:updatedHits}) //后面对象会复写先前对象的该属性
-      result: {...this.state.result, hits:updatedHits}
+      // result: {...this.state.result, hits:updatedHits}
+      results: {
+        ...results,
+        [searchKey]: {hits: updatedHits, page}
+      }
     });
   }
   onSearchChange(event) {
@@ -95,8 +115,9 @@ class App extends Component {
   // 增加组件的交互，增加dismiss按钮，使用 this.onDismiss 并不够,因为这个类方法需要接收 item.objectID 属性来识别那个将要被忽略的项,
   // 这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数
   render() {
-    const {searchTerm, result} = this.state;
-    const page = (result && result.page) || 0;
+    const {searchTerm, results, searchKey} = this.state;
+    const page = (results && results[searchKey] && results[searchKey].page) || 0;
+    const list = (results && results[searchKey] && results[searchKey].hits) || []; //节省Table组件的条件渲染，没有结果就得到空列表 且传给More用searchTerm
     // if(!result) {return null;}
     return (
       <div className="page">
@@ -105,13 +126,11 @@ class App extends Component {
             value={searchTerm}
             onChange={this.onSearchChange}
             onSubmit={this.onSearchSubmit}> Search </Search>
-          {result && 
           <Table
-            list={result.hits}
+            list={list}
             onDismiss={this.onDismiss}/>
-          }
           <div className="interactions">
-            <Button onClick={() => this.fetchSearchTopStories(searchTerm, page + 1)}>
+            <Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
               More
             </Button> 
           </div>
