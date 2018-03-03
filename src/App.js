@@ -6,6 +6,7 @@ const DEFAULT_QUERY = 'redux';
 const PATH_BASE = 'https://hn.algolia.com/api/v1';
 const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
+const PARAM_PAGE = 'page=';
 // const list = [
 //   {
 //     title: 'React',
@@ -59,8 +60,8 @@ class App extends Component {
   setSearchTopStories(result) {
     this.setState({result});
   }
-  fetchSearchTopStories(searchTerm) {
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+  fetchSearchTopStories(searchTerm, page=0) {
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`)
       .then(response => response.json())
       .then(result => this.setSearchTopStories(result))
       .catch(e => e);
@@ -94,6 +95,7 @@ class App extends Component {
   // 这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数
   render() {
     const {searchTerm, result} = this.state;
+    const page = (result && result.page) || 0;
     // if(!result) {return null;}
     return (
       <div className="page">
@@ -107,6 +109,11 @@ class App extends Component {
             list={result.hits}
             onDismiss={this.onDismiss}/>
           }
+          <div className="interactions">
+            <Button onClick={() => this.fetchSearchTopStories(searchTerm, page + 1)}>
+              More
+            </Button> 
+          </div>
         </div>
       </div>
     );
