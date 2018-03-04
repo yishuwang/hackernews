@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import fetch from 'isomorphic-fetch';
 import './App.css';
 
 // react拥抱不可变
@@ -179,3 +180,8 @@ const Button = ({onClick, className='', children}) =>
     {children}
   </button>
 export default App;
+export {
+  Button,
+  Search,
+  Table
+};
