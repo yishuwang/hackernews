@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import fetch from 'isomorphic-fetch';
 import {sortBy} from 'lodash';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import './App.css';
 
 // react拥抱不可变
@@ -286,13 +287,16 @@ const Button = ({onClick, className, children}) =>
   children: PropTypes.node.isRequired,
 };
 const Sort = ({sortKey,activeSortKey,onSort,children}) => {
-  const sortClass = ['button-inline'];
-  if(sortKey === activeSortKey) {
-    sortClass.push('button-active');
-  }
+  const sortClass = classNames(
+    'button-inline',
+    {'button-active':sortKey === activeSortKey});
+  // const sortClass = ['button-inline'];
+  // if(sortKey === activeSortKey) {
+  //   sortClass.push('button-active');
+  // }
   return (
   <Button onClick={()=>onSort(sortKey)}
-      className={sortClass.join(' ')}>
+      className={sortClass}>
     {children}
   </Button> ); 
 }
