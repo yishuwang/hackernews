@@ -53,8 +53,8 @@ class App extends Component {
       searchTerm: DEFAULT_QUERY, //初始搜索词
       error: null,
       isLoading:false,
-      sortKey: 'NONE',
-      isSortReverse: false,
+      // sortKey: 'NONE',
+      // isSortReverse: false,
     };
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this); // 填充数据
@@ -62,12 +62,12 @@ class App extends Component {
     this.onDismiss = this.onDismiss.bind(this); //类方法 this是类的实例
     this.onSearchChange = this.onSearchChange.bind(this); // 表单搜索
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
-    this.onSort = this.onSort.bind(this); //排序
+    // this.onSort = this.onSort.bind(this); //排序
   }
-  onSort(sortKey) {
-    const isSortReverse = this.state.sortKey == sortKey && !this.state.isSortReverse;
-    this.setState({sortKey, isSortReverse});
-  }
+  // onSort(sortKey) {
+  //   const isSortReverse = this.state.sortKey == sortKey && !this.state.isSortReverse;
+  //   this.setState({sortKey, isSortReverse});
+  // }
   needsToSearchTopStories(searchTerm) {
     return !this.state.results[searchTerm];
   }
@@ -138,7 +138,7 @@ class App extends Component {
   // 增加组件的交互，增加dismiss按钮，使用 this.onDismiss 并不够,因为这个类方法需要接收 item.objectID 属性来识别那个将要被忽略的项,
   // 这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数
   render() {
-    const {searchTerm, results, searchKey, error, isLoading, sortKey, isSortReverse} = this.state;
+    const {searchTerm, results, searchKey, error, isLoading} = this.state;
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
     const list = (results && results[searchKey] && results[searchKey].hits) || []; //节省Table组件的条件渲染，没有结果就得到空列表 且传给More用searchTerm
     // if(!result) {return null;}
@@ -155,9 +155,6 @@ class App extends Component {
             </div>
           : <Table
               list={list}
-              sortKey={sortKey}
-              isSortReverse={isSortReverse}
-              onSort={this.onSort}
               onDismiss={this.onDismiss}
             />
           }
@@ -194,72 +191,89 @@ class Search extends Component {
     )
   }
 }
- 
-const Table = ({list, sortKey,isSortReverse ,onSort, onDismiss}) =>{
-  const sortedList = SORTS[sortKey](list);
-  const reverseSortedList = isSortReverse
-    ? sortedList.reverse()
-    : sortedList;
-  return (
-  <div className="table">
-    <div className="table-header">
-      <span style={{ width: '40%' }}>
-        <Sort
-          sortKey={'TITLE'}
-          onSort={onSort}
-          activeSortKey={sortKey}
-        > Title
-        </Sort>
-      </span>
-      <span style={{ width: '30%' }}>
-        <Sort
-          sortKey={'AUTHOR'}
-          onSort={onSort}
-          activeSortKey={sortKey}
-        >
-          Author
-        </Sort>
-      </span>
-      <span style={{ width: '10%' }}>
-        <Sort
-          sortKey={'COMMENTS'}
-          onSort={onSort}
-          activeSortKey={sortKey}
-        > Comments
-        </Sort>
-      </span>
-      <span style={{ width: '10%' }}>
-        <Sort
-          sortKey={'POINTS'}
-          onSort={onSort}
-          activeSortKey={sortKey}
-        >
-          Points
-        </Sort>
-      </span>
-      <span style={{ width: '10%' }}>
-        Archive
-      </span>
-    </div>
-    {reverseSortedList.map(item=>
-      <div key={item.objectID} className="table-row">
-        <span style={largeColumn}>
-          <a href={item.url}>{item.title}</a>
-        </span>
-        <span style={midColumn}>{item.author}</span>
-        <span style={smallColumn}>{item.num_comments}</span>
-        <span style={smallColumn}>{item.points}</span>
-        <span style={smallColumn}>
-          <Button onClick={() => onDismiss(item.objectID)} className="button-inline">
-            Dissmiss
-          </Button>
-        </span>
+class Table extends Component {
+  // 组件管理状态，需添加构造函数和初始状态
+  constructor(props) {
+    super(props);
+    this.state = {
+      sortKey:'NONE',
+      isSortReverse:false,
+    };
+    this.onSort=this.onSort.bind(this);
+  }
+  onSort(sortKey) {
+    const isSortReverse = this.state.sortKey == sortKey && !this.state.isSortReverse;
+    this.setState({sortKey, isSortReverse});
+  }
+  render() {
+    const { list, onDismiss } = this.props;
+    const {sortKey, isSortReverse} = this.state;
+    const sortedList = SORTS[sortKey](list);
+    const reverseSortedList = isSortReverse
+      ? sortedList.reverse()
+      : sortedList;
+    return (
+      <div className="table">
+        <div className="table-header">
+          <span style={{ width: '40%' }}>
+            <Sort
+              sortKey={'TITLE'}
+              onSort={this.onSort}
+              activeSortKey={sortKey}
+            > Title
+            </Sort>
+          </span>
+          <span style={{ width: '30%' }}>
+            <Sort
+              sortKey={'AUTHOR'}
+              onSort={this.onSort}
+              activeSortKey={sortKey}
+            >
+              Author
+            </Sort>
+          </span>
+          <span style={{ width: '10%' }}>
+            <Sort
+              sortKey={'COMMENTS'}
+              onSort={this.onSort}
+              activeSortKey={sortKey}
+            > Comments
+            </Sort>
+          </span>
+          <span style={{ width: '10%' }}>
+            <Sort
+              sortKey={'POINTS'}
+              onSort={this.onSort}
+              activeSortKey={sortKey}
+            >
+              Points
+            </Sort>
+          </span>
+          <span style={{ width: '10%' }}>
+            Archive
+          </span>
+        </div>
+        {reverseSortedList.map(item=>
+          <div key={item.objectID} className="table-row">
+            <span style={largeColumn}>
+              <a href={item.url}>{item.title}</a>
+            </span>
+            <span style={midColumn}>{item.author}</span>
+            <span style={smallColumn}>{item.num_comments}</span>
+            <span style={smallColumn}>{item.points}</span>
+            <span style={smallColumn}>
+              <Button onClick={() => onDismiss(item.objectID)} className="button-inline">
+                Dissmiss
+              </Button>
+            </span>
+          </div>
+        )}
       </div>
-    )}
-  </div>
-  );
+    );
+  }
 }
-  Table.propTypes = {
+
+Table.propTypes = {
   list: PropTypes.arrayOf(
     PropTypes.shape({
       objectID: PropTypes.string.isRequired,
