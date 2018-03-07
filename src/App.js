@@ -142,13 +142,11 @@ class App extends Component {
             />
           }
           <div className="interactions">
-            {isLoading
-              ?<Loading/>
-              :
-              <Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
+            <ButtonWithLoading
+              isLoading={isLoading}
+              onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
                 More
-              </Button> 
-            }
+            </ButtonWithLoading> 
           </div>
         </div>
       </div>
@@ -224,6 +222,14 @@ const Button = ({onClick, className, children}) =>
 };
 const Loading = () => 
   <div>Loading...</div>
+  // with前缀命名HOC 条件渲染
+const withLoading = (Component) => ({isLoading, ...rest}) =>
+  isLoading
+  ?<Loading/>
+  :<Component {...rest}/>
+const ButtonWithLoading = withLoading(Button);
+// function withFoo = (Component) => (props) =>
+//   <Component {...props} />
 export default App;
 export {
   Button,
