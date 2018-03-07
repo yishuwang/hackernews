@@ -42,6 +42,7 @@ class App extends Component {
       searchKey: '', //储存单个result,searchTerm是动态变量，这里需要稳定的变量，保存最近提交给API的关键词，也可以用它检索结果集中的某个结果
       searchTerm: DEFAULT_QUERY, //初始搜索词
       error: null,
+      isLoading:false,
     };
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this); // 填充数据
@@ -77,10 +78,12 @@ class App extends Component {
         ...results, // 用对象扩展运算符将所有其他包含在results集中的searchKey展开，否则将失去之前所有存储过的results
         [searchKey]: { hits: updatedHits, page} // searchKey(键名，在componentDidMount 和 onSearchSubmit设置的)保存更新后的hits和page 
         // [searchKey]是通过计算得到属性名， 实现动态分配对象的值
-      }
+      },
+      isLoading: false
     });
   }
   fetchSearchTopStories(searchTerm, page=0) {
+    this.setState({isLoading: true});
     fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
       .then(response => response.json())
       .then(result => this.setSearchTopStories(result))
@@ -118,7 +121,7 @@ class App extends Component {
   // 增加组件的交互，增加dismiss按钮，使用 this.onDismiss 并不够,因为这个类方法需要接收 item.objectID 属性来识别那个将要被忽略的项,
   // 这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数
   render() {
-    const {searchTerm, results, searchKey, error} = this.state;
+    const {searchTerm, results, searchKey, error, isLoading} = this.state;
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
     const list = (results && results[searchKey] && results[searchKey].hits) || []; //节省Table组件的条件渲染，没有结果就得到空列表 且传给More用searchTerm
     // if(!result) {return null;}
@@ -139,9 +142,13 @@ class App extends Component {
             />
           }
           <div className="interactions">
-            <Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
-              More
-            </Button> 
+            {isLoading
+              ?<Loading/>
+              :
+              <Button onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}>
+                More
+              </Button> 
+            }
           </div>
         </div>
       </div>
@@ -215,6 +222,8 @@ const Button = ({onClick, className, children}) =>
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
 };
+const Loading = () => 
+  <div>Loading...</div>
 export default App;
 export {
   Button,
