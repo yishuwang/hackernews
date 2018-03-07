@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import fetch from 'isomorphic-fetch';
+import {sortBy} from 'lodash';
 import PropTypes from 'prop-types';
 import './App.css';
 
@@ -11,6 +12,14 @@ const PATH_SEARCH = '/search';
 const PARAM_SEARCH = 'query=';
 const PARAM_PAGE = 'page=';
 const PARAM_HPP = 'hitsPerPage=';
+
+const SORTS = {
+  NONE: list => list,
+  TITLE: list => sortBy(list, 'title'),
+  AUTHOR: list => sortBy(list, 'author'),
+  COMMENTS: list => sortBy(list, 'num_comments').reverse(),
+  POINTS: list => sortBy(list, 'points').reverse(),
+};
 // const list = [
 //   {
 //     title: 'React',
@@ -43,6 +52,7 @@ class App extends Component {
       searchTerm: DEFAULT_QUERY, //初始搜索词
       error: null,
       isLoading:false,
+      sortKey: 'NONE',
     };
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this); // 填充数据
@@ -50,6 +60,10 @@ class App extends Component {
     this.onDismiss = this.onDismiss.bind(this); //类方法 this是类的实例
     this.onSearchChange = this.onSearchChange.bind(this); // 表单搜索
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
+    this.onSort = this.onSort.bind(this); //排序
+  }
+  onSort(sortKey) {
+    this.setState({sortKey});
   }
   needsToSearchTopStories(searchTerm) {
     return !this.state.results[searchTerm];
@@ -121,7 +135,7 @@ class App extends Component {
   // 增加组件的交互，增加dismiss按钮，使用 this.onDismiss 并不够,因为这个类方法需要接收 item.objectID 属性来识别那个将要被忽略的项,
   // 这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数
   render() {
-    const {searchTerm, results, searchKey, error, isLoading} = this.state;
+    const {searchTerm, results, searchKey, error, isLoading, sortKey} = this.state;
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
     const list = (results && results[searchKey] && results[searchKey].hits) || []; //节省Table组件的条件渲染，没有结果就得到空列表 且传给More用searchTerm
     // if(!result) {return null;}
@@ -138,6 +152,8 @@ class App extends Component {
             </div>
           : <Table
               list={list}
+              sortKey={sortKey}
+              onSort={this.onSort}
               onDismiss={this.onDismiss}
             />
           }
@@ -175,9 +191,44 @@ class Search extends Component {
   }
 }
  
-const Table = ({list, onDismiss}) =>
+const Table = ({list, sortKey, onSort, onDismiss}) =>
   <div className="table">
-    {list.map(item=>
+    <div className="table-header">
+      <span style={{ width: '40%' }}>
+        <Sort
+          sortKey={'TITLE'}
+          onSort={onSort}
+        > Title
+        </Sort>
+      </span>
+      <span style={{ width: '30%' }}>
+        <Sort
+          sortKey={'AUTHOR'}
+          onSort={onSort}
+        >
+          Author
+        </Sort>
+      </span>
+      <span style={{ width: '10%' }}>
+        <Sort
+          sortKey={'COMMENTS'}
+          onSort={onSort}
+        > Comments
+        </Sort>
+      </span>
+      <span style={{ width: '10%' }}>
+        <Sort
+          sortKey={'POINTS'}
+          onSort={onSort}
+        >
+          Points
+        </Sort>
+      </span>
+      <span style={{ width: '10%' }}>
+        Archive
+      </span>
+    </div>
+    {SORTS[sortKey](list).map(item=>
       <div key={item.objectID} className="table-row">
         <span style={largeColumn}>
           <a href={item.url}>{item.title}</a>
@@ -220,6 +271,11 @@ const Button = ({onClick, className, children}) =>
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
 };
+const Sort = ({sortKey,onSort,children}) => 
+  <Button onClick={()=>onSort(sortKey)}
+      className="button-inline">
+    {children}
+  </Button> 
 const Loading = () => 
   <div>Loading...</div>
   // with前缀命名HOC 条件渲染
