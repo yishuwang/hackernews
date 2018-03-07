@@ -43,6 +43,25 @@ const largeColumn = {width: '40%'};
 const midColumn = {width: '30%'};
 const smallColumn = {width: '10%'};
 // 通过继承类的方式声明组件，公共接口render必须被重写，他定义了一个react组件的输出  需要使用内部状态才使用ES6类组件，其余组件使用函数式无状态组件
+const updateSearchTopStoriesState =(hits,page) => (prevState) => {
+    const {searchKey, results} = prevState;
+    const oldHits = results && results[searchKey]
+      ? results[searchKey].hits
+      : [];
+    const updatedHits = [
+      ...oldHits,
+      ...hits
+    ];
+    return {
+    // 以搜索词为键名，所有结果储存起来，接下来根据searchKey从resluts集中检索result
+      results: {
+        ...results, // 用对象扩展运算符将所有其他包含在results集中的searchKey展开，否则将失去之前所有存储过的results
+        [searchKey]: { hits: updatedHits, page} // searchKey(键名，在componentDidMount 和 onSearchSubmit设置的)保存更新后的hits和page 
+        // [searchKey]是通过计算得到属性名， 实现动态分配对象的值
+      },
+      isLoading: false
+    };
+};
 class App extends Component {
   // 构造函数中初始化组件的状态  
   constructor(props) {
@@ -82,26 +101,9 @@ class App extends Component {
   setSearchTopStories(result) {
     const {hits, page} =result;
     // 防止脏状态造成的bug
-    this.setState(prevState => {
-      const {searchKey, results} = prevState;
-      const oldHits = results && results[searchKey]
-        ? results[searchKey].hits
-        : [];
-      const updatedHits = [
-        ...oldHits,
-        ...hits
-      ];
-      return {
-      // 以搜索词为键名，所有结果储存起来，接下来根据searchKey从resluts集中检索result
-        results: {
-          ...results, // 用对象扩展运算符将所有其他包含在results集中的searchKey展开，否则将失去之前所有存储过的results
-          [searchKey]: { hits: updatedHits, page} // searchKey(键名，在componentDidMount 和 onSearchSubmit设置的)保存更新后的hits和page 
-          // [searchKey]是通过计算得到属性名， 实现动态分配对象的值
-        },
-        isLoading: false
-      };
-    });
+    this.setState(updateSearchTopStoriesState(hits,page));
   }
+  
   fetchSearchTopStories(searchTerm, page=0) {
     this.setState({isLoading: true});
     fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`)
