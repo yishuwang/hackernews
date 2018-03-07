@@ -53,6 +53,7 @@ class App extends Component {
       error: null,
       isLoading:false,
       sortKey: 'NONE',
+      isSortReverse: false,
     };
     this.needsToSearchTopStories = this.needsToSearchTopStories.bind(this);
     this.setSearchTopStories = this.setSearchTopStories.bind(this); // 填充数据
@@ -63,7 +64,8 @@ class App extends Component {
     this.onSort = this.onSort.bind(this); //排序
   }
   onSort(sortKey) {
-    this.setState({sortKey});
+    const isSortReverse = this.state.sortKey == sortKey && !this.state.isSortReverse;
+    this.setState({sortKey, isSortReverse});
   }
   needsToSearchTopStories(searchTerm) {
     return !this.state.results[searchTerm];
@@ -135,7 +137,7 @@ class App extends Component {
   // 增加组件的交互，增加dismiss按钮，使用 this.onDismiss 并不够,因为这个类方法需要接收 item.objectID 属性来识别那个将要被忽略的项,
   // 这就是为什么它需要被封装到另一个函数中来传递这个属性。这个概念在 JavaScript 中被称为高阶函数
   render() {
-    const {searchTerm, results, searchKey, error, isLoading, sortKey} = this.state;
+    const {searchTerm, results, searchKey, error, isLoading, sortKey, isSortReverse} = this.state;
     const page = (results && results[searchKey] && results[searchKey].page) || 0;
     const list = (results && results[searchKey] && results[searchKey].hits) || []; //节省Table组件的条件渲染，没有结果就得到空列表 且传给More用searchTerm
     // if(!result) {return null;}
@@ -153,6 +155,7 @@ class App extends Component {
           : <Table
               list={list}
               sortKey={sortKey}
+              isSortReverse={isSortReverse}
               onSort={this.onSort}
               onDismiss={this.onDismiss}
             />
@@ -191,13 +194,19 @@ class Search extends Component {
   }
 }
  
-const Table = ({list, sortKey, onSort, onDismiss}) =>
+const Table = ({list, sortKey,isSortReverse ,onSort, onDismiss}) =>{
+  const sortedList = SORTS[sortKey](list);
+  const reverseSortedList = isSortReverse
+    ? sortedList.reverse()
+    : sortedList;
+  return (
   <div className="table">
     <div className="table-header">
       <span style={{ width: '40%' }}>
         <Sort
           sortKey={'TITLE'}
           onSort={onSort}
+          activeSortKey={sortKey}
         > Title
         </Sort>
       </span>
@@ -205,6 +214,7 @@ const Table = ({list, sortKey, onSort, onDismiss}) =>
         <Sort
           sortKey={'AUTHOR'}
           onSort={onSort}
+          activeSortKey={sortKey}
         >
           Author
         </Sort>
@@ -213,6 +223,7 @@ const Table = ({list, sortKey, onSort, onDismiss}) =>
         <Sort
           sortKey={'COMMENTS'}
           onSort={onSort}
+          activeSortKey={sortKey}
         > Comments
         </Sort>
       </span>
@@ -220,6 +231,7 @@ const Table = ({list, sortKey, onSort, onDismiss}) =>
         <Sort
           sortKey={'POINTS'}
           onSort={onSort}
+          activeSortKey={sortKey}
         >
           Points
         </Sort>
@@ -228,7 +240,7 @@ const Table = ({list, sortKey, onSort, onDismiss}) =>
         Archive
       </span>
     </div>
-    {SORTS[sortKey](list).map(item=>
+    {reverseSortedList.map(item=>
       <div key={item.objectID} className="table-row">
         <span style={largeColumn}>
           <a href={item.url}>{item.title}</a>
@@ -244,6 +256,8 @@ const Table = ({list, sortKey, onSort, onDismiss}) =>
       </div>
     )}
   </div>
+  );
+}
   Table.propTypes = {
   list: PropTypes.arrayOf(
     PropTypes.shape({
@@ -271,11 +285,17 @@ const Button = ({onClick, className, children}) =>
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
 };
-const Sort = ({sortKey,onSort,children}) => 
+const Sort = ({sortKey,activeSortKey,onSort,children}) => {
+  const sortClass = ['button-inline'];
+  if(sortKey === activeSortKey) {
+    sortClass.push('button-active');
+  }
+  return (
   <Button onClick={()=>onSort(sortKey)}
-      className="button-inline">
+      className={sortClass.join(' ')}>
     {children}
-  </Button> 
+  </Button> ); 
+}
 const Loading = () => 
   <div>Loading...</div>
   // with前缀命名HOC 条件渲染
