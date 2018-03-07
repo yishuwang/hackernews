@@ -81,22 +81,25 @@ class App extends Component {
   }
   setSearchTopStories(result) {
     const {hits, page} =result;
-    const {searchKey, results} = this.state;
-    const oldHits = results && results[searchKey]
-      ? results[searchKey].hits
-      : [];
-    const updatedHits = [
-      ...oldHits,
-      ...hits
-    ];
-    // 以搜索词为键名，所有结果储存起来，接下来根据searchKey从resluts集中检索result
-    this.setState({
-      results: {
-        ...results, // 用对象扩展运算符将所有其他包含在results集中的searchKey展开，否则将失去之前所有存储过的results
-        [searchKey]: { hits: updatedHits, page} // searchKey(键名，在componentDidMount 和 onSearchSubmit设置的)保存更新后的hits和page 
-        // [searchKey]是通过计算得到属性名， 实现动态分配对象的值
-      },
-      isLoading: false
+    // 防止脏状态造成的bug
+    this.setState(prevState => {
+      const {searchKey, results} = prevState;
+      const oldHits = results && results[searchKey]
+        ? results[searchKey].hits
+        : [];
+      const updatedHits = [
+        ...oldHits,
+        ...hits
+      ];
+      return {
+      // 以搜索词为键名，所有结果储存起来，接下来根据searchKey从resluts集中检索result
+        results: {
+          ...results, // 用对象扩展运算符将所有其他包含在results集中的searchKey展开，否则将失去之前所有存储过的results
+          [searchKey]: { hits: updatedHits, page} // searchKey(键名，在componentDidMount 和 onSearchSubmit设置的)保存更新后的hits和page 
+          // [searchKey]是通过计算得到属性名， 实现动态分配对象的值
+        },
+        isLoading: false
+      };
     });
   }
   fetchSearchTopStories(searchTerm, page=0) {
